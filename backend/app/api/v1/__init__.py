@@ -13,6 +13,7 @@ from app.api.v1.analytics import router as analytics_router
 from app.api.v1.notifications import router as notifications_router
 from app.api.v1.search import router as search_router
 from app.api.v1.ai_assistant import router as ai_router
+from app.api.v1.state import router as state_router
 
 api_v1_router = APIRouter()
 
@@ -30,3 +31,4 @@ api_v1_router.include_router(analytics_router, prefix="/analytics", tags=["Analy
 api_v1_router.include_router(notifications_router, prefix="/notifications", tags=["Notifications"])
 api_v1_router.include_router(search_router, prefix="/search", tags=["Search"])
 api_v1_router.include_router(ai_router, prefix="/ai", tags=["AI Assistant"])
+api_v1_router.include_router(state_router, prefix="/state", tags=["Cloud Sync"])
