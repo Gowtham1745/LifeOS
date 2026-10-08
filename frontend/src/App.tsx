@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { FormEvent, ReactNode, useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 import { Activity, CheckCircle2, DollarSign, Flame, LayoutDashboard, LogOut, Plus, Target, Wallet } from 'lucide-react'
 import './App.css'
@@ -29,7 +29,7 @@ function App(){
  <Panel title='Active goals'>{dash.active_goals.length?dash.active_goals.map(g=><div className='goal-row' key={g.id}><div className='goal-top'><span>{g.title}</span><b>{Math.round(g.progress_percentage)}%</b></div><div className='progress'><i style={{width:Math.min(100,g.progress_percentage)+'%'}}/></div></div>):<Empty text='No active goals yet.'/>}</Panel>
  <Panel title='Money this month'><div className='finance-big'><DollarSign size={18}/>{money(dash.finance_summary.month_income)}</div><div className='finance-line'><span>Expenses</span><b>− {money(dash.finance_summary.month_expenses)}</b></div><div className='finance-line'><span>Savings</span><b>{money(dash.finance_summary.savings)}</b></div></Panel></section><footer>LifeOS · Your life, organized.</footer></main></div>
 }
-function Stat(p:{icon:React.ReactNode;label:string;value:string;detail:string}){return <div className='stat-card'><span className='stat-icon'>{p.icon}</span><small>{p.label}</small><strong>{p.value}</strong><em>{p.detail}</em></div>}
-function Panel(p:{title:string;action?:React.ReactNode;children:React.ReactNode}){return <section className='panel'><div className='panel-title'><h3>{p.title}</h3>{p.action}</div>{p.children}</section>}
+function Stat(p:{icon:ReactNode;label:string;value:string;detail:string}){return <div className='stat-card'><span className='stat-icon'>{p.icon}</span><small>{p.label}</small><strong>{p.value}</strong><em>{p.detail}</em></div>}
+function Panel(p:{title:string;action?:ReactNode;children:ReactNode}){return <section className='panel'><div className='panel-title'><h3>{p.title}</h3>{p.action}</div>{p.children}</section>}
 function Empty(p:{text:string}){return <div className='empty'>{p.text}</div>}
 export default App
