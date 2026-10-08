@@ -217,6 +217,15 @@ async def toggle_habit_date(
     await db.commit()
 
     # Re-fetch updated habit
-    stmt = select(Habit).where(Habit.id == habit_id).options(selectinload(Habit.logs))
+    # Refresh both the habit row and its relationship collection from the database.
+    # The same SQLAlchemy session may already have this Habit instance cached with
+    # an empty `logs` collection from the earlier query. `populate_existing=True`
+    # ensures the newly-created toggle log is reflected in the response.
+    stmt = (
+        select(Habit)
+        .where(Habit.id == habit_id)
+        .options(selectinload(Habit.logs))
+        .execution_options(populate_existing=True)
+    )
     updated_habit = (await db.execute(stmt)).scalar_one()
     return habit_to_response(updated_habit, date.today())
