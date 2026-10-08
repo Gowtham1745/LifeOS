@@ -1,0 +1,11 @@
+{
+  "name": "LifeOS — Personal Operating System",
+  "short_name": "LifeOS",
+  "description": "A calm personal workspace for tasks, habits, goals, money, notes, focus and reflection.",
+  "start_url": "/LifeOS/",
+  "scope": "/LifeOS/",
+  "display": "standalone",
+  "background_color": "#080c13",
+  "theme_color": "#625bff",
+  "icons": []
+}
