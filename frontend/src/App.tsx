@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useRef,useState} from 'react'
-import {Activity,BarChart3,BookOpen,CalendarDays,Check,CheckCircle2,Circle,Clock3,Download,Flame,LayoutDashboard,ListTodo,Moon,Plus,RotateCcw,Save,Search,Settings,ShieldCheck,Sparkles,StickyNote,Sun,Target,Timer,Trash2,TrendingUp,Upload,Wallet,X} from 'lucide-react'
+import {Activity,BarChart3,BookOpen,CalendarDays,Check,CheckCircle2,Circle,Clock3,Flame,LayoutDashboard,ListTodo,Moon,Plus,RotateCcw,Save,Search,Settings,Sparkles,StickyNote,Sun,Target,Timer,Trash2,TrendingUp,Wallet,X} from 'lucide-react'
 import './App.css'
 
 type Task={id:string;title:string;done:boolean;priority:'Low'|'Medium'|'High'}
@@ -21,7 +21,6 @@ const streak=(dates:string[])=>{const s=new Set(dates);let n=0;const d=new Date(
 
 export default function App(){
  const [s,setS]=useState<Store>(load),[page,setPage]=useState('Overview'),[dark,setDark]=useState(localStorage.getItem('lifeos_theme')!=='light'),[toast,setToast]=useState(''),[query,setQuery]=useState(''),[menu,setMenu]=useState(false),[modal,setModal]=useState(false)
- const file=useRef<HTMLInputElement>(null)
  useEffect(()=>localStorage.setItem(K,JSON.stringify(s)),[s]);useEffect(()=>localStorage.setItem('lifeos_theme',dark?'dark':'light'),[dark]);useEffect(()=>{if(toast){const t=setTimeout(()=>setToast(''),2200);return()=>clearTimeout(t)}},[toast])
  const update=(fn:(x:Store)=>Store)=>setS(x=>fn({...x}));const flash=(x:string)=>setToast(x)
  const income=useMemo(()=>s.transactions.filter(x=>x.type==='income').reduce((a,x)=>a+x.amount,0),[s]),expenses=useMemo(()=>s.transactions.filter(x=>x.type==='expense').reduce((a,x)=>a+x.amount,0),[s])
@@ -29,8 +28,6 @@ export default function App(){
  const nav=[['Overview',LayoutDashboard],['Tasks',ListTodo],['Habits',Flame],['Goals',Target],['Finance',Wallet],['Notes',StickyNote],['Journal',BookOpen],['Focus',Timer],['Calendar',CalendarDays]] as const
  const toggleTask=(i:string)=>update(x=>({...x,tasks:x.tasks.map(t=>t.id===i?{...t,done:!t.done}:t)}))
  const toggleHabit=(i:string)=>update(x=>({...x,habits:x.habits.map(h=>h.id===i?{...h,doneDates:h.doneDates.includes(day())?h.doneDates.filter(d=>d!==day()):[...h.doneDates,day()]}:h)}))
- const exportData=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(s,null,2)],{type:'application/json'}));a.download='lifeos-backup.json';a.click();flash('Backup exported')}
- const importData=(e:React.ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const v=JSON.parse(String(r.result));if(!valid(v))throw 0;setS(v);flash('Backup restored')}catch{flash('Invalid backup')}e.target.value=''};r.readAsText(f)}
  return <div className={dark?'app dark':'app'}>
   <aside className={menu?'sidebar open':'sidebar'}><div className="brand"><span className="brandIcon"><Activity/></span><div><b>LifeOS</b><small>PERSONAL OS</small></div><button className="mobileClose" onClick={()=>setMenu(false)}><X/></button></div><nav>{nav.map(([n,I])=><button key={n} className={page===n?'nav active':'nav'} onClick={()=>{setPage(n);setMenu(false)}}><I/>{n}</button>)}</nav><div className="sidebarBottom"><button className="nav" onClick={()=>setDark(!dark)}>{dark?<Sun/>:<Moon/>}{dark?'Light mode':'Dark mode'}</button><button className="nav" onClick={()=>setModal(true)}><Settings/>Settings</button><div className="profile"><div className="avatar">{s.name[0]}</div><div><b>{s.name}</b><small>Building in public</small></div></div></div></aside>
   {menu&&<div className="mobileShade" onClick={()=>setMenu(false)}/>}<main className="main"><header className="topbar"><button className="mobileMenu iconBtn" onClick={()=>setMenu(true)}><ListTodo/></button><div><span className="eyebrow">{new Date().toDateString().toUpperCase()}</span><h1>{page==='Overview'?'Good evening, '+s.name+' 👋':page}</h1><p>Make today count. Small actions compound.</p></div><div className="topActions"><div className="searchBox"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search…"/></div><button className="iconBtn" onClick={()=>setDark(!dark)}>{dark?<Sun/>:<Moon/>}</button><button className="primary" onClick={()=>setModal(true)}><Plus/>New task</button></div></header>
