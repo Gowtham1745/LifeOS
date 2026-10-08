@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useRef,useState} from 'react'
+import {useEffect,useMemo,useState} from 'react'
 import {Activity,BarChart3,BookOpen,CalendarDays,Check,CheckCircle2,Circle,Clock3,Flame,LayoutDashboard,ListTodo,Moon,Plus,RotateCcw,Save,Search,Settings,Sparkles,StickyNote,Sun,Target,Timer,Trash2,TrendingUp,Wallet,X} from 'lucide-react'
 import './App.css'
 
