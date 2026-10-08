@@ -9,6 +9,7 @@ from app.models.note import Note
 from app.models.journal import JournalEntry
 from app.models.focus import FocusSession
 from app.models.notification import Notification
+from app.models.state import UserState
 
 __all__ = [
     "Base",
@@ -28,4 +29,5 @@ __all__ = [
     "JournalEntry",
     "FocusSession",
     "Notification",
+    "UserState",
 ]
