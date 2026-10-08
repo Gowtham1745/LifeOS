@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: lifeos-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: BACKEND_CORS_ORIGINS
+        value: '["https://gowtham1745.github.io"]'
