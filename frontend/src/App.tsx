@@ -10,6 +10,19 @@ type Note={id:string;title:string;content:string}
 type Journal={id:string;date:string;mood:string;text:string}
 type EventItem={id:string;title:string;date:string;time:string}
 type Store={name:string;tasks:Task[];habits:Habit[];goals:Goal[];transactions:Tx[];notes:Note[];journal:Journal[];events:EventItem[];checkins:string[]}
+const API_URL=(import.meta.env.VITE_API_URL||'').replace(/\\/$/,'')
+const TOKEN_KEY='lifeos_access_token'
+const isCloud=Boolean(API_URL)
+async function api<T>(path:string,options:RequestInit={}) {
+  if(!API_URL) throw new Error('Cloud sync is not configured yet.')
+  const token=localStorage.getItem(TOKEN_KEY)
+  const res=await fetch(API_URL+path,{...options,headers:{'Content-Type':'application/json',...(token?{Authorization:`Bearer ${token}`}:{}),...(options.headers||{})}})
+  let body:any=null
+  try{body=await res.json()}catch{}
+  if(!res.ok) throw new Error(body?.detail||body?.message||`Request failed (${res.status})`)
+  return body as T
+}
+
 const K='lifeos_store_final'
 const day=()=>{const d=new Date();return d.toISOString().slice(0,10)}
 const id=()=>crypto.randomUUID()
@@ -21,8 +34,34 @@ const streak=(dates:string[])=>{const s=new Set(dates);let n=0;const d=new Date(
 
 export default function App(){
  const [s,setS]=useState<Store>(load),[page,setPage]=useState('Overview'),[dark,setDark]=useState(localStorage.getItem('lifeos_theme')!=='light'),[toast,setToast]=useState(''),[query,setQuery]=useState(''),[menu,setMenu]=useState(false),[modal,setModal]=useState(false)
- useEffect(()=>localStorage.setItem(K,JSON.stringify(s)),[s]);useEffect(()=>localStorage.setItem('lifeos_theme',dark?'dark':'light'),[dark]);useEffect(()=>{if(toast){const t=setTimeout(()=>setToast(''),2200);return()=>clearTimeout(t)}},[toast])
+ const [authReady,setAuthReady]=useState(!isCloud),[cloudUser,setCloudUser]=useState<{id:string;full_name:string;email:string}|null>(null),[syncing,setSyncing]=useState(false),[authError,setAuthError]=useState('')
+ const hydrating=useState(false)[0]
+ useEffect(()=>localStorage.setItem('lifeos_theme',dark?'dark':'light'),[dark])
+ useEffect(()=>{if(toast){const t=setTimeout(()=>setToast(''),2200);return()=>clearTimeout(t)}},[toast])
+ useEffect(()=>{
+   if(!isCloud){setAuthReady(true);return}
+   const token=localStorage.getItem(TOKEN_KEY)
+   if(!token){setAuthReady(true);return}
+   ;(async()=>{
+     try{
+       const me=await api<{id:string;full_name:string;email:string}>('/api/v1/auth/me')
+       setCloudUser(me)
+       const remote=await api<{data:Partial<Store>}>('/api/v1/state')
+       if(remote.data && valid(remote.data)){setS(remote.data as Store)}
+     }catch(e){localStorage.removeItem(TOKEN_KEY);setCloudUser(null);setAuthError(e instanceof Error?e.message:'Session expired')}
+     finally{setAuthReady(true)}
+   })()
+ },[])
+ useEffect(()=>{
+   if(!isCloud||!cloudUser||!authReady)return
+   const t=setTimeout(async()=>{try{setSyncing(true);await api('/api/v1/state',{method:'PUT',body:JSON.stringify({data:s})})}catch(e){setToast(e instanceof Error?e.message:'Sync failed')}finally{setSyncing(false)}},700)
+   return()=>clearTimeout(t)
+ },[s,cloudUser,authReady])
+ useEffect(()=>{if(!isCloud||!cloudUser)return;localStorage.setItem(K,JSON.stringify(s))},[s,cloudUser])
  const update=(fn:(x:Store)=>Store)=>setS(x=>fn({...x}));const flash=(x:string)=>setToast(x)
+ if(!authReady)return <div className="authShell"><div className="authCard"><Activity/><h1>Preparing your LifeOS…</h1><p>Loading your private workspace.</p></div></div>
+ if(isCloud&&!cloudUser)return <AuthScreen error={authError} onAuthed={(user,state)=>{setCloudUser(user);setS(valid(state)?state:{...seed,name:user.full_name});setAuthError('')}} />
+
  const income=useMemo(()=>s.transactions.filter(x=>x.type==='income').reduce((a,x)=>a+x.amount,0),[s]),expenses=useMemo(()=>s.transactions.filter(x=>x.type==='expense').reduce((a,x)=>a+x.amount,0),[s])
  const taskRate=Math.round(s.tasks.filter(x=>x.done).length/Math.max(1,s.tasks.length)*100),habitRate=Math.round(s.habits.filter(x=>x.doneDates.includes(day())).length/Math.max(1,s.habits.length)*100),goalRate=Math.round(s.goals.reduce((a,x)=>a+x.progress,0)/Math.max(1,s.goals.length)),score=Math.round(taskRate*.4+habitRate*.35+goalRate*.25)
  const nav=[['Overview',LayoutDashboard],['Tasks',ListTodo],['Habits',Flame],['Goals',Target],['Finance',Wallet],['Notes',StickyNote],['Journal',BookOpen],['Focus',Timer],['Calendar',CalendarDays]] as const
@@ -40,10 +79,41 @@ export default function App(){
   {page==='Journal'&&<Journal s={s} update={update}/>}
   {page==='Focus'&&<Focus s={s} update={update} flash={flash}/>}
   {page==='Calendar'&&<Calendar s={s} update={update}/>}
-  {query&&<SearchResults q={query} s={s} setPage={setPage}/>}<footer><b>LifeOS</b> · Local-first · Your data stays in this browser.</footer></main>
+  {query&&<SearchResults q={query} s={s} setPage={setPage}/>}<footer><b>LifeOS</b> · {isCloud?<>Private cloud workspace {syncing?'· Syncing…':'· Synced'}</>:<>Local-first demo · Your data stays in this browser.</>}</footer></main>
   {modal&&<QuickModal onClose={()=>setModal(false)} update={update} flash={flash}/>}
   {toast&&<div className="toast"><CheckCircle2 size={18}/>{toast}</div>}
  </div>
+}
+
+function AuthScreen(p:{error:string;onAuthed:(user:{id:string;full_name:string;email:string},state:Store)=>void}){
+ const [mode,setMode]=useState<'login'|'register'>('register'),[name,setName]=useState(''),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(p.error)
+ const submit=async()=>{
+   setError('');if(mode==='register'&&!name.trim())return setError('Please enter your name.')
+   if(!email.includes('@'))return setError('Please enter a valid email.')
+   if(password.length<8)return setError('Password must be at least 8 characters.')
+   try{setBusy(true)
+     const body=mode==='register'?{full_name:name.trim(),email,password}:{email,password}
+     const data=await api<{access_token:string;user:{id:string;full_name:string;email:string}}>(`/api/v1/auth/${mode==='register'?'register':'login'}`,{method:'POST',body:JSON.stringify(body)})
+     localStorage.setItem(TOKEN_KEY,data.access_token)
+     const remote=await api<{data:Partial<Store>}>('/api/v1/state')
+     const state=valid(remote.data)?remote.data as Store:{...seed,name:data.user.full_name,tasks:[],habits:[],goals:[],transactions:[],notes:[],journal:[],events:[],checkins:[]}
+     await api('/api/v1/state',{method:'PUT',body:JSON.stringify({data:state})})
+     p.onAuthed(data.user,state)
+   }catch(e){setError(e instanceof Error?e.message:'Unable to continue')}finally{setBusy(false)}
+ }
+ return <div className="authShell"><div className="authCard">
+   <div className="authBrand"><span className="brandIcon"><Activity/></span><span><b>LifeOS</b><small>PERSONAL OS</small></span></div>
+   <span className="eyebrow">{mode==='register'?'YOUR PRIVATE WORKSPACE':'WELCOME BACK'}</span>
+   <h1>{mode==='register'?'Build your life, one day at a time.':'Welcome back.'}</h1>
+   <p className="authLead">Tasks, habits, goals, money, notes and reflections — in one calm place.</p>
+   <div className="authTabs"><button className={mode==='login'?'active':''} onClick={()=>{setMode('login');setError('')}}>Sign in</button><button className={mode==='register'?'active':''} onClick={()=>{setMode('register');setError('')}}>Create account</button></div>
+   {mode==='register'&&<input value={name} onChange={e=>setName(e.target.value)} placeholder="Full name" autoComplete="name"/>}
+   <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email address" autoComplete="email"/>
+   <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password (8+ characters)" autoComplete={mode==='login'?'current-password':'new-password'} onKeyDown={e=>e.key==='Enter'&&submit()}/>
+   {error&&<div className="authError">{error}</div>}
+   <button className="primary wide" disabled={busy} onClick={submit}>{busy?'Please wait…':mode==='register'?'Create my LifeOS':'Sign in to LifeOS'}</button>
+   <small className="authPrivacy">Your account data belongs to your account. Use the same login on any supported device.</small>
+ </div></div>
 }
 
 function Panel({title,icon,children}:{title:string;icon:React.ReactNode;children:React.ReactNode}){return <section className="panel"><div className="panelHead"><div><span className="panelIcon">{icon}</span><h3>{title}</h3></div></div>{children}</section>}
