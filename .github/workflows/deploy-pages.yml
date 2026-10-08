@@ -34,6 +34,8 @@ jobs:
 
       - name: TypeScript and production build
         working-directory: frontend
+        env:
+          VITE_API_URL: ${{ vars.LIFEOS_API_URL }}
         run: npm run build
 
       - name: Configure GitHub Pages
