@@ -1,122 +1,35 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import { FormEvent, useEffect, useMemo, useState } from 'react'
+import axios from 'axios'
+import { Activity, CheckCircle2, DollarSign, Flame, LayoutDashboard, LogOut, Plus, Target, Wallet } from 'lucide-react'
 import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
+const API = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/v1'
+const api = axios.create({ baseURL: API })
+type Task={id:string;title:string;status:string;priority:string}
+type Habit={id:string;name:string;current_streak:number;today_completed:boolean}
+type Goal={id:string;title:string;progress_percentage:number}
+type Dashboard={greeting:string;tasks_summary:{total_today:number;completed_today:number;remaining_today:number;completion_rate:number;tasks:Task[]};habits_summary:{total:number;completed_today:number;completion_rate:number;habits:Habit[]};active_goals:Goal[];finance_summary:{month_income:number;month_expenses:number;savings:number;savings_rate:number;currency:string};productivity:{score:number;focus_minutes_today:number}}
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+function App(){
+ const [token,setToken]=useState(localStorage.getItem('lifeos_token')); const [dash,setDash]=useState<Dashboard|null>(null); const [mode,setMode]=useState<'login'|'register'>('login'); const [error,setError]=useState(''); const [task,setTask]=useState(''); const headers=useMemo(()=>token?{Authorization:'Bearer '+token}:{},[token])
+ const load=async()=>{if(!token)return;try{const r=await api.get('/dashboard/',{headers});setDash(r.data)}catch{localStorage.removeItem('lifeos_token');setToken(null)}}
+ useEffect(()=>{load()},[token])
+ async function auth(e:FormEvent<HTMLFormElement>){e.preventDefault();setError('');const f=new FormData(e.currentTarget);const body=mode==='register'?{email:f.get('email'),full_name:f.get('name'),password:f.get('password'),confirm_password:f.get('password')}:{email:f.get('email'),password:f.get('password')};try{const r=await api.post(mode==='register'?'/auth/register':'/auth/login',body);localStorage.setItem('lifeos_token',r.data.access_token);setToken(r.data.access_token)}catch(err:any){setError(err?.response?.data?.detail||'Unable to continue')}}
+ async function addTask(e:FormEvent){e.preventDefault();if(!task.trim())return;try{await api.post('/tasks/',{title:task,status:'todo',priority:'medium',due_date:new Date().toISOString().slice(0,10)},{headers});setTask('');await load()}catch{setError('Could not create task')}}
+ async function toggleTask(t:Task){try{await api.patch('/tasks/'+t.id,{status:t.status==='completed'?'todo':'completed'},{headers});await load()}catch{setError('Could not update task')}}
+ async function toggleHabit(h:Habit){try{await api.post('/habits/'+h.id+'/toggle',{}, {headers});await load()}catch{setError('Could not update habit')}}
+ const money=(n:number)=>new Intl.NumberFormat('en-IN',{maximumFractionDigits:0}).format(n)
+ if(!token)return <main className='auth-shell'><div className='auth-card'><div className='brand-mark'><Activity/></div><p className='eyebrow'>PERSONAL OPERATING SYSTEM</p><h1>LifeOS</h1><p className='muted'>One calm place for your tasks, habits, goals and money.</p><div className='auth-tabs'><button className={mode==='login'?'active':''} onClick={()=>setMode('login')}>Sign in</button><button className={mode==='register'?'active':''} onClick={()=>setMode('register')}>Create account</button></div><form onSubmit={auth} className='form-stack'>{mode==='register'&&<input name='name' placeholder='Full name' required/>}<input name='email' type='email' placeholder='Email address' required/><input name='password' type='password' placeholder='Password' required minLength={6}/>{error&&<div className='error'>{error}</div>}<button className='primary wide'>{mode==='login'?'Enter LifeOS':'Create my LifeOS'}</button></form></div></main>
+ if(!dash)return <div className='loading-screen'><Activity className='spin'/>Loading LifeOS…</div>
+ return <div className='app-shell'><aside className='sidebar'><div className='logo-row'><span className='logo-icon'><Activity size={20}/></span><strong>LifeOS</strong></div><nav><button className='nav-item active'><LayoutDashboard/>Overview</button><button className='nav-item'><CheckCircle2/>Tasks</button><button className='nav-item'><Flame/>Habits</button><button className='nav-item'><Target/>Goals</button><button className='nav-item'><Wallet/>Finance</button></nav><button className='nav-item logout' onClick={()=>{localStorage.removeItem('lifeos_token');setToken(null)}}><LogOut/>Sign out</button></aside>
+ <main className='main'><header className='topbar'><div><p className='eyebrow'>YOUR DAY</p><h2>{dash.greeting}</h2></div><div className='avatar'>L</div></header>{error&&<div className='toast'>{error}</div>}
+ <section className='hero-grid'><div className='score-card'><div><p className='eyebrow'>PRODUCTIVITY SCORE</p><div className='score'>{dash.productivity.score}<span>/100</span></div><p className='muted'>{dash.productivity.focus_minutes_today} minutes focused today</p></div><Activity size={55}/></div><Stat icon={<CheckCircle2/>} label='Tasks today' value={dash.tasks_summary.completed_today+'/'+dash.tasks_summary.total_today} detail={dash.tasks_summary.completion_rate+'% complete'}/><Stat icon={<Flame/>} label='Habits' value={dash.habits_summary.completed_today+'/'+dash.habits_summary.total} detail={dash.habits_summary.completion_rate+'% today'}/><Stat icon={<DollarSign/>} label='Savings' value={money(dash.finance_summary.savings)} detail={dash.finance_summary.savings_rate+'% savings rate'}/></section>
+ <section className='content-grid'><Panel title='Today’s tasks' action={<button className='icon-button' onClick={()=>{const v=prompt('Task name');if(v){setTask(v);document.getElementById('task-form')?.dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}))}}}><Plus/></button>}><form id='task-form' className='quick-add' onSubmit={addTask}><input value={task} onChange={e=>setTask(e.target.value)} placeholder='Add a task…'/><button className='primary'>Add</button></form>{dash.tasks_summary.tasks.length?dash.tasks_summary.tasks.map(t=><button className='list-row' key={t.id} onClick={()=>toggleTask(t)}><span className={'check '+(t.status==='completed'?'done':'')}>{t.status==='completed'&&<CheckCircle2 size={17}/>}</span><span className={t.status==='completed'?'strike':''}>{t.title}</span><span className='priority'>{t.priority}</span></button>):<Empty text='No tasks for today.'/>}</Panel>
+ <Panel title='Habits'>{dash.habits_summary.habits.length?dash.habits_summary.habits.map(h=><button className='list-row' key={h.id} onClick={()=>toggleHabit(h)}><span className={'check '+(h.today_completed?'done':'')}>{h.today_completed&&<CheckCircle2 size={17}/>}</span><span>{h.name}</span><span className='streak'><Flame size={14}/>{h.current_streak}</span></button>):<Empty text='No habits yet.'/>}</Panel>
+ <Panel title='Active goals'>{dash.active_goals.length?dash.active_goals.map(g=><div className='goal-row' key={g.id}><div className='goal-top'><span>{g.title}</span><b>{Math.round(g.progress_percentage)}%</b></div><div className='progress'><i style={{width:Math.min(100,g.progress_percentage)+'%'}}/></div></div>):<Empty text='No active goals yet.'/>}</Panel>
+ <Panel title='Money this month'><div className='finance-big'><DollarSign size={18}/>{money(dash.finance_summary.month_income)}</div><div className='finance-line'><span>Expenses</span><b>− {money(dash.finance_summary.month_expenses)}</b></div><div className='finance-line'><span>Savings</span><b>{money(dash.finance_summary.savings)}</b></div></Panel></section><footer>LifeOS · Your life, organized.</footer></main></div>
 }
-
+function Stat(p:{icon:React.ReactNode;label:string;value:string;detail:string}){return <div className='stat-card'><span className='stat-icon'>{p.icon}</span><small>{p.label}</small><strong>{p.value}</strong><em>{p.detail}</em></div>}
+function Panel(p:{title:string;action?:React.ReactNode;children:React.ReactNode}){return <section className='panel'><div className='panel-title'><h3>{p.title}</h3>{p.action}</div>{p.children}</section>}
+function Empty(p:{text:string}){return <div className='empty'>{p.text}</div>}
 export default App
