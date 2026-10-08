@@ -35,7 +35,6 @@ const streak=(dates:string[])=>{const s=new Set(dates);let n=0;const d=new Date(
 export default function App(){
  const [s,setS]=useState<Store>(load),[page,setPage]=useState('Overview'),[dark,setDark]=useState(localStorage.getItem('lifeos_theme')!=='light'),[toast,setToast]=useState(''),[query,setQuery]=useState(''),[menu,setMenu]=useState(false),[modal,setModal]=useState(false)
  const [authReady,setAuthReady]=useState(!isCloud),[cloudUser,setCloudUser]=useState<{id:string;full_name:string;email:string}|null>(null),[syncing,setSyncing]=useState(false),[authError,setAuthError]=useState('')
- const hydrating=useState(false)[0]
  useEffect(()=>localStorage.setItem('lifeos_theme',dark?'dark':'light'),[dark])
  useEffect(()=>{if(toast){const t=setTimeout(()=>setToast(''),2200);return()=>clearTimeout(t)}},[toast])
  useEffect(()=>{
