@@ -28,6 +28,7 @@ class User(Base, TimestampMixin):
     journal_entries: Mapped[List["JournalEntry"]] = relationship("JournalEntry", back_populates="user", cascade="all, delete-orphan")
     focus_sessions: Mapped[List["FocusSession"]] = relationship("FocusSession", back_populates="user", cascade="all, delete-orphan")
     notifications: Mapped[List["Notification"]] = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
+    state: Mapped[Optional["UserState"]] = relationship("UserState", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
 
 class UserSettings(Base, TimestampMixin):
