@@ -12,7 +12,9 @@ type EventItem={id:string;title:string;date:string;time:string}
 type Store={name:string;tasks:Task[];habits:Habit[];goals:Goal[];transactions:Tx[];notes:Note[];journal:Journal[];events:EventItem[];checkins:string[]}
 const API_URL=(import.meta.env.VITE_API_URL||'').replace(/\/$/,'')
 const TOKEN_KEY='lifeos_access_token'
-const isCloud=Boolean(API_URL)
+const PROFILE_KEY='lifeos_local_profile_v1'
+// LifeOS is local-first: no password, Google login, or server account is required.
+const isCloud=false
 async function api<T>(path:string,options:RequestInit={}) {
   if(!API_URL) throw new Error('Cloud sync is not configured yet.')
   const token=localStorage.getItem(TOKEN_KEY)
@@ -27,14 +29,17 @@ const K='lifeos_store_final'
 const day=()=>{const d=new Date();return d.toISOString().slice(0,10)}
 const id=()=>crypto.randomUUID()
 const money=(n:number)=>'₹'+Math.round(n).toLocaleString('en-IN')
-const seed:Store={name:'Gowtham',tasks:[{id:'1',title:'Plan today before starting',done:true,priority:'High'},{id:'2',title:'Build one useful feature',done:false,priority:'High'},{id:'3',title:'Read and learn',done:false,priority:'Medium'}],habits:[{id:'1',name:'Morning routine',doneDates:[day()]},{id:'2',name:'Read / learn',doneDates:[]},{id:'3',name:'Exercise',doneDates:[]}],goals:[{id:'1',title:'Build a strong public portfolio',progress:68,deadline:'2026-12-31'},{id:'2',title:'Create 30 useful websites',progress:24,deadline:'2027-06-30'}],transactions:[{id:'1',label:'Salary',amount:18000,type:'income',category:'Income'},{id:'2',label:'Subscriptions',amount:1500,type:'expense',category:'Lifestyle'},{id:'3',label:'Wi-Fi',amount:500,type:'expense',category:'Bills'}],notes:[{id:'1',title:'LifeOS idea',content:'Keep building in public. Every shipped feature is a lesson.'}],journal:[{id:'1',date:day(),mood:'Focused',text:'Today I shipped another piece of LifeOS.'}],events:[{id:'1',title:'LifeOS build session',date:day(),time:'20:30'}],checkins:[day()]}
+const emptyStore=(name=''):Store=>({name,tasks:[],habits:[],goals:[],transactions:[],notes:[],journal:[],events:[],checkins:[]})
+const seed:Store=emptyStore('')
 const valid=(v:unknown):v is Store=>!!v&&typeof v==='object'&&Array.isArray((v as Store).tasks)&&Array.isArray((v as Store).habits)
-const load=()=>{try{const v=JSON.parse(localStorage.getItem(K)||'null');return valid(v)?v:seed}catch{return seed}}
+const load=()=>{try{const v=JSON.parse(localStorage.getItem(K)||'null');if(!valid(v))return emptyStore();if(v.name==='Gowtham'&&v.tasks?.some((t:Task)=>t.id==='1'&&t.title==='Plan today before starting'))return emptyStore();return v}catch{return emptyStore()}}
+type LocalProfile={fullName:string;birthday?:string;createdAt:string}
+const loadProfile=():LocalProfile|null=>{try{const p=JSON.parse(localStorage.getItem(PROFILE_KEY)||'null');return p&&typeof p.fullName==='string'&&p.fullName.trim()?p:null}catch{return null}}
 const streak=(dates:string[])=>{const s=new Set(dates);let n=0;const d=new Date();while(s.has(d.toISOString().slice(0,10))){n++;d.setDate(d.getDate()-1)}return n}
 
 export default function App(){
- const [s,setS]=useState<Store>(load),[page,setPage]=useState('Overview'),[dark,setDark]=useState(localStorage.getItem('lifeos_theme')!=='light'),[toast,setToast]=useState(''),[query,setQuery]=useState(''),[menu,setMenu]=useState(false),[modal,setModal]=useState(false)
- const [profileOpen,setProfileOpen]=useState(false),[authReady,setAuthReady]=useState(!isCloud),[cloudUser,setCloudUser]=useState<{id:string;full_name:string;email:string}|null>(null),[syncing,setSyncing]=useState(false),[authError,setAuthError]=useState('')
+ const [s,setS]=useState<Store>(load),[localProfile,setLocalProfile]=useState<LocalProfile|null>(loadProfile),[page,setPage]=useState('Overview'),[dark,setDark]=useState(localStorage.getItem('lifeos_theme')!=='light'),[toast,setToast]=useState(''),[query,setQuery]=useState(''),[menu,setMenu]=useState(false),[modal,setModal]=useState(false)
+ const [profileOpen,setProfileOpen]=useState(false),[authReady,setAuthReady]=useState(true),[cloudUser,setCloudUser]=useState<{id:string;full_name:string;email:string}|null>(null),[syncing,setSyncing]=useState(false),[authError,setAuthError]=useState('')
  useEffect(()=>localStorage.setItem('lifeos_theme',dark?'dark':'light'),[dark])
  useEffect(()=>{if(toast){const t=setTimeout(()=>setToast(''),2200);return()=>clearTimeout(t)}},[toast])
  useEffect(()=>{
@@ -58,8 +63,7 @@ export default function App(){
  },[s,cloudUser,authReady])
  useEffect(()=>{if(!isCloud||!cloudUser)return;localStorage.setItem(K,JSON.stringify(s))},[s,cloudUser])
  const update=(fn:(x:Store)=>Store)=>setS(x=>fn({...x}));const flash=(x:string)=>setToast(x)
- if(!authReady)return <div className="authShell"><div className="authCard"><Activity/><h1>Preparing your LifeOS…</h1><p>Loading your private workspace.</p></div></div>
- if(isCloud&&!cloudUser)return <AuthScreen error={authError} onAuthed={(user,state)=>{setCloudUser(user);setS(valid(state)?state:{...seed,name:user.full_name});setAuthError('')}} />
+ if(!localProfile)return <LocalProfileSetup onCreate={(profile)=>{localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));setLocalProfile(profile);setS(emptyStore(profile.fullName));localStorage.setItem(K,JSON.stringify(emptyStore(profile.fullName)))}} />
 
  const income=useMemo(()=>s.transactions.filter(x=>x.type==='income').reduce((a,x)=>a+x.amount,0),[s]),expenses=useMemo(()=>s.transactions.filter(x=>x.type==='expense').reduce((a,x)=>a+x.amount,0),[s])
  const taskRate=Math.round(s.tasks.filter(x=>x.done).length/Math.max(1,s.tasks.length)*100),habitRate=Math.round(s.habits.filter(x=>x.doneDates.includes(day())).length/Math.max(1,s.habits.length)*100),goalRate=Math.round(s.goals.reduce((a,x)=>a+x.progress,0)/Math.max(1,s.goals.length)),score=Math.round(taskRate*.4+habitRate*.35+goalRate*.25)
@@ -67,7 +71,7 @@ export default function App(){
  const toggleTask=(i:string)=>update(x=>({...x,tasks:x.tasks.map(t=>t.id===i?{...t,done:!t.done}:t)}))
  const toggleHabit=(i:string)=>update(x=>({...x,habits:x.habits.map(h=>h.id===i?{...h,doneDates:h.doneDates.includes(day())?h.doneDates.filter(d=>d!==day()):[...h.doneDates,day()]}:h)}))
  return <div className={dark?'app dark':'app'}>
-  <aside className={menu?'sidebar open':'sidebar'}><div className="brand"><span className="brandIcon"><Activity/></span><div><b>LifeOS</b><small>PERSONAL OS</small></div><button className="mobileClose" onClick={()=>setMenu(false)}><X/></button></div><nav>{nav.map(([n,I])=><button key={n} className={page===n?'nav active':'nav'} onClick={()=>{setPage(n);setMenu(false)}}><I/>{n}</button>)}</nav><div className="sidebarBottom"><button className="nav" onClick={()=>setDark(!dark)}>{dark?<Sun/>:<Moon/>}{dark?'Light mode':'Dark mode'}</button><button className="nav" onClick={()=>setProfileOpen(true)}><Settings/>Account & Settings</button><div className="profile" onClick={()=>setProfileOpen(true)} role="button" tabIndex={0}><div className="avatar">{s.name[0]?.toUpperCase()}</div><div><b>{s.name}</b><small>{cloudUser?.email||'Local workspace'}</small></div></div></div></aside>
+  <aside className={menu?'sidebar open':'sidebar'}><div className="brand"><span className="brandIcon"><Activity/></span><div><b>LifeOS</b><small>PERSONAL OS</small></div><button className="mobileClose" onClick={()=>setMenu(false)}><X/></button></div><nav>{nav.map(([n,I])=><button key={n} className={page===n?'nav active':'nav'} onClick={()=>{setPage(n);setMenu(false)}}><I/>{n}</button>)}</nav><div className="sidebarBottom"><button className="nav" onClick={()=>setDark(!dark)}>{dark?<Sun/>:<Moon/>}{dark?'Light mode':'Dark mode'}</button><button className="nav" onClick={()=>setProfileOpen(true)}><Settings/>Account & Settings</button><div className="profile" onClick={()=>setProfileOpen(true)} role="button" tabIndex={0}><div className="avatar">{s.name[0]?.toUpperCase()||'L'}</div><div><b>{s.name||'Your profile'}</b><small>Saved on this device</small></div></div></div></aside>
   {menu&&<div className="mobileShade" onClick={()=>setMenu(false)}/>}<main className="main"><header className="topbar"><button className="mobileMenu iconBtn" onClick={()=>setMenu(true)}><ListTodo/></button><div><span className="eyebrow">{new Date().toDateString().toUpperCase()}</span><h1>{page==='Overview'?'Good evening, '+s.name+' 👋':page}</h1><p>Make today count. Small actions compound.</p></div><div className="topActions"><div className="searchBox"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search…"/></div><button className="iconBtn" onClick={()=>setDark(!dark)}>{dark?<Sun/>:<Moon/>}</button><button className="primary" onClick={()=>setModal(true)}><Plus/>New task</button></div></header>
   {page==='Overview'&&<Overview s={s} score={score} taskRate={taskRate} habitRate={habitRate} income={income} expenses={expenses} toggleTask={toggleTask} toggleHabit={toggleHabit} setPage={setPage}/>}
   {page==='Tasks'&&<Tasks s={s} update={update} toggle={toggleTask}/>}
@@ -78,10 +82,28 @@ export default function App(){
   {page==='Journal'&&<Journal s={s} update={update}/>}
   {page==='Focus'&&<Focus s={s} update={update} flash={flash}/>}
   {page==='Calendar'&&<Calendar s={s} update={update}/>}
-  {query&&<SearchResults q={query} s={s} setPage={setPage}/>}<footer><b>LifeOS</b> · {isCloud?<>Private cloud workspace {syncing?'· Syncing…':'· Synced'}</>:<>Local-first demo · Your data stays in this browser.</>}</footer></main>
+  {query&&<SearchResults q={query} s={s} setPage={setPage}/>}<footer><b>LifeOS</b> · Private to this browser/device · Your data is saved locally.</footer></main>
   {modal&&<QuickModal onClose={()=>setModal(false)} update={update} flash={flash}/>}
-  {profileOpen&&<ProfileModal user={cloudUser} onClose={()=>setProfileOpen(false)} onLogout={()=>{localStorage.removeItem(TOKEN_KEY);setCloudUser(null);setProfileOpen(false);setS({...seed,name:'New user',tasks:[],habits:[],goals:[],transactions:[],notes:[],journal:[],events:[],checkins:[]})}}/>}{toast&&<div className="toast"><CheckCircle2 size={18}/>{toast}</div>}
+  {profileOpen&&<ProfileModal profile={localProfile} onClose={()=>setProfileOpen(false)} onLogout={()=>{localStorage.removeItem(TOKEN_KEY);localStorage.removeItem(K);localStorage.removeItem(PROFILE_KEY);setCloudUser(null);setLocalProfile(null);setProfileOpen(false);setS(emptyStore())}}/>}{toast&&<div className="toast"><CheckCircle2 size={18}/>{toast}</div>}
  </div>
+}
+
+function LocalProfileSetup(p:{onCreate:(profile:LocalProfile)=>void}){
+ const [fullName,setFullName]=useState(''),[birthday,setBirthday]=useState(''),[error,setError]=useState('')
+ const submit=()=>{const name=fullName.trim().replace(/\s+/g,' ');if(name.length<2){setError('Please enter your name (at least 2 characters).');return}p.onCreate({fullName:name,...(birthday?{birthday}:{}),createdAt:new Date().toISOString()})}
+ return <div className="authShell"><div className="authCard localSetup">
+  <div className="authBrand"><span className="brandIcon"><Activity/></span><span><b>LifeOS</b><small>YOUR PERSONAL SPACE</small></span></div>
+  <span className="eyebrow">WELCOME — LET'S SET UP YOUR SPACE</span>
+  <h1>Your life, your space.</h1>
+  <p className="authLead">What should we call you? We'll personalize LifeOS for you. No account, password, Google sign-in, or email required.</p>
+  <label className="setupLabel" htmlFor="lifeos-full-name">Your name</label>
+  <input id="lifeos-full-name" autoFocus value={fullName} onChange={e=>setFullName(e.target.value)} placeholder="e.g. Suresh Kumar" autoComplete="name" maxLength={80} onKeyDown={e=>e.key==='Enter'&&submit()}/>
+  <label className="setupLabel" htmlFor="lifeos-birthday">Birthday <span>(optional)</span></label>
+  <input id="lifeos-birthday" type="date" value={birthday} onChange={e=>setBirthday(e.target.value)}/>
+  {error&&<div className="authError">{error}</div>}
+  <button className="primary wide setupSubmit" onClick={submit}>Create my personal space <span aria-hidden="true">→</span></button>
+  <small className="authPrivacy">Your profile and entries stay in this browser on this device. Don't enter sensitive information. Clearing browser data can erase your LifeOS.</small>
+ </div></div>
 }
 
 function AuthScreen(p:{error:string;onAuthed:(user:{id:string;full_name:string;email:string},state:Store)=>void}){
@@ -115,7 +137,7 @@ function AuthScreen(p:{error:string;onAuthed:(user:{id:string;full_name:string;e
  </div></div>
 }
 
-function ProfileModal(p:{user:{id:string;full_name:string;email:string}|null;onClose:()=>void;onLogout:()=>void}){return <div className="modalShade" onClick={p.onClose}><div className="modalCard profileModal" onClick={e=>e.stopPropagation()}><button className="modalClose" onClick={p.onClose}><X/></button><div className="profileHero"><div className="profileAvatar">{p.user?.full_name?.[0]?.toUpperCase()||'L'}</div><div><span className="eyebrow">YOUR ACCOUNT</span><h2>{p.user?.full_name||'Local workspace'}</h2><p>{p.user?.email||'This browser-only workspace is not connected to an account.'}</p></div></div><div className="profileRows"><div><span>Account</span><b>{p.user?'Cloud account':'Local workspace'}</b></div><div><span>Sync</span><b>{p.user?'Synced across devices':'Browser only'}</b></div><div><span>Privacy</span><b>Your data is scoped to your account</b></div></div>{p.user&&<button className="danger wide" onClick={p.onLogout}>Sign out</button>}<button className="secondary wide" onClick={p.onClose}>Close</button></div></div>}
+function ProfileModal(p:{profile:LocalProfile|null;onClose:()=>void;onLogout:()=>void}){return <div className="modalBack" onClick={p.onClose}><div className="modal profileModal" onClick={e=>e.stopPropagation()}><div className="modalHead"><div><span className="eyebrow">YOUR PROFILE</span><h2>Personal space</h2></div><button className="iconBtn" onClick={p.onClose} aria-label="Close profile"><X/></button></div><div className="profileHero"><div className="profileAvatar">{p.profile?.fullName?.[0]?.toUpperCase()||'L'}</div><div><span className="eyebrow">LIFEOS USER</span><h2>{p.profile?.fullName||'Local profile'}</h2><p>This profile belongs to this device's browser.</p></div></div><div className="profileRows"><div><span>Profile</span><b>Device-only</b></div><div><span>Sync</span><b>Not enabled</b></div><div><span>Data storage</span><b>Saved in this browser</b></div>{p.profile?.birthday&&<div><span>Birthday</span><b>{p.profile.birthday}</b></div>}</div><p className="settingsNote">If you use a different phone or browser, it starts with a separate profile. LifeOS does not upload this information to a server.</p><button className="danger wide" onClick={()=>{if(window.confirm('Log out and erase this device’s LifeOS profile and all saved entries? This cannot be undone.'))p.onLogout()}}>Log out and erase device data</button><button className="secondary wide" onClick={p.onClose}>Cancel</button></div></div>}
 
 function Panel({title,icon,children}:{title:string;icon:React.ReactNode;children:React.ReactNode}){return <section className="panel"><div className="panelHead"><div><span className="panelIcon">{icon}</span><h3>{title}</h3></div></div>{children}</section>}
 function Overview(p:{s:Store;score:number;taskRate:number;habitRate:number;income:number;expenses:number;toggleTask:(i:string)=>void;toggleHabit:(i:string)=>void;setPage:(x:string)=>void}){return <div className="content"><section className="hero"><div className="heroMain"><div><span className="eyebrow">TODAY'S MOMENTUM</span><h2>Build the life you want,<br/><span>one day at a time.</span></h2><p>Your personal dashboard for focus, habits, goals and money.</p></div><div className="scoreRing"><strong>{p.score}</strong><span>/100</span><small>Momentum</small></div></div><div className="heroStats"><div><Flame/><b>{streak(p.s.checkins)}</b><span>day streak</span></div><div><CheckCircle2/><b>{p.taskRate}%</b><span>tasks complete</span></div><div><Target/><b>{p.habitRate}%</b><span>habits today</span></div><button onClick={()=>p.setPage('Journal')}><Sparkles/> Check in</button></div></section><section className="grid3"><Panel title="Today's tasks" icon={<ListTodo/>}><div className="list">{p.s.tasks.slice(0,4).map(t=><button className="row" key={t.id} onClick={()=>p.toggleTask(t.id)}><span className={t.done?'check done':'check'}>{t.done&&<Check/>}</span><span className={t.done?'strike':''}>{t.title}</span><em className={'p '+t.priority.toLowerCase()}>{t.priority}</em></button>)}</div></Panel><Panel title="Habit pulse" icon={<Flame/>}><div className="list">{p.s.habits.map(h=><button className="row" key={h.id} onClick={()=>p.toggleHabit(h.id)}><span className={h.doneDates.includes(day())?'check done':'check'}>{h.doneDates.includes(day())&&<Check/>}</span><span>{h.name}</span><em className="streak"><Flame size={13}/>{streak(h.doneDates)}</em></button>)}</div></Panel><Panel title="Money snapshot" icon={<Wallet/>}><div className="moneyHero"><small>NET SAVINGS</small><strong>{money(p.income-p.expenses)}</strong><span><TrendingUp size={14}/> this month</span></div><div className="moneyLine"><span>Income</span><b>{money(p.income)}</b></div><div className="moneyLine"><span>Expenses</span><b>{money(p.expenses)}</b></div></Panel></section><section className="grid2"><Panel title="Goals in motion" icon={<Target/>}><div className="goalList">{p.s.goals.map(g=><div className="goal" key={g.id}><div className="goalTop"><span>{g.title}</span><b>{g.progress}%</b></div><div className="bar"><i style={{width:g.progress+'%'}}/></div><small>{g.deadline}</small></div>)}</div></Panel><Panel title="LifeOS at a glance" icon={<BarChart3/>}><div className="metricGrid"><div><span>Goals average</span><b>{Math.round(p.s.goals.reduce((a,g)=>a+g.progress,0)/Math.max(1,p.s.goals.length))}%</b></div><div><span>Focus sessions</span><b>{p.s.journal.length}</b></div><div><span>Notes</span><b>{p.s.notes.length}</b></div><div><span>Events</span><b>{p.s.events.length}</b></div></div></Panel></section></div>}
