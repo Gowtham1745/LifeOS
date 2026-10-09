@@ -106,37 +106,6 @@ function LocalProfileSetup(p:{onCreate:(profile:LocalProfile)=>void}){
  </div></div>
 }
 
-function AuthScreen(p:{error:string;onAuthed:(user:{id:string;full_name:string;email:string},state:Store)=>void}){
- const [mode,setMode]=useState<'login'|'register'>('register'),[name,setName]=useState(''),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(p.error)
- const submit=async()=>{
-   setError('');if(mode==='register'&&!name.trim())return setError('Please enter your name.')
-   if(!email.includes('@'))return setError('Please enter a valid email.')
-   if(password.length<8)return setError('Password must be at least 8 characters.')
-   try{setBusy(true)
-     const body=mode==='register'?{full_name:name.trim(),email,password}:{email,password}
-     const data=await api<{access_token:string;user:{id:string;full_name:string;email:string}}>(`/api/v1/auth/${mode==='register'?'register':'login'}`,{method:'POST',body:JSON.stringify(body)})
-     localStorage.setItem(TOKEN_KEY,data.access_token)
-     const remote=await api<{data:Partial<Store>}>('/api/v1/state')
-     const state=valid(remote.data)?remote.data as Store:{...seed,name:data.user.full_name,tasks:[],habits:[],goals:[],transactions:[],notes:[],journal:[],events:[],checkins:[]}
-     await api('/api/v1/state',{method:'PUT',body:JSON.stringify({data:state})})
-     p.onAuthed(data.user,state)
-   }catch(e){setError(e instanceof Error?e.message:'Unable to continue')}finally{setBusy(false)}
- }
- return <div className="authShell"><div className="authCard">
-   <div className="authBrand"><span className="brandIcon"><Activity/></span><span><b>LifeOS</b><small>PERSONAL OS</small></span></div>
-   <span className="eyebrow">{mode==='register'?'YOUR PRIVATE WORKSPACE':'WELCOME BACK'}</span>
-   <h1>{mode==='register'?'Build your life, one day at a time.':'Welcome back.'}</h1>
-   <p className="authLead">Tasks, habits, goals, money, notes and reflections — in one calm place.</p>
-   <div className="authTabs"><button className={mode==='login'?'active':''} onClick={()=>{setMode('login');setError('')}}>Sign in</button><button className={mode==='register'?'active':''} onClick={()=>{setMode('register');setError('')}}>Create account</button></div>
-   {mode==='register'&&<input value={name} onChange={e=>setName(e.target.value)} placeholder="Full name" autoComplete="name"/>}
-   <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email address" autoComplete="email"/>
-   <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password (8+ characters)" autoComplete={mode==='login'?'current-password':'new-password'} onKeyDown={e=>e.key==='Enter'&&submit()}/>
-   {error&&<div className="authError">{error}</div>}
-   <button className="primary wide" disabled={busy} onClick={submit}>{busy?'Please wait…':mode==='register'?'Create my LifeOS':'Sign in to LifeOS'}</button>
-   <small className="authPrivacy">Your account data belongs to your account. Use the same login on any supported device.</small>
- </div></div>
-}
-
 function ProfileModal(p:{profile:LocalProfile|null;onClose:()=>void;onLogout:()=>void}){return <div className="modalBack" onClick={p.onClose}><div className="modal profileModal" onClick={e=>e.stopPropagation()}><div className="modalHead"><div><span className="eyebrow">YOUR PROFILE</span><h2>Personal space</h2></div><button className="iconBtn" onClick={p.onClose} aria-label="Close profile"><X/></button></div><div className="profileHero"><div className="profileAvatar">{p.profile?.fullName?.[0]?.toUpperCase()||'L'}</div><div><span className="eyebrow">LIFEOS USER</span><h2>{p.profile?.fullName||'Local profile'}</h2><p>This profile belongs to this device's browser.</p></div></div><div className="profileRows"><div><span>Profile</span><b>Device-only</b></div><div><span>Sync</span><b>Not enabled</b></div><div><span>Data storage</span><b>Saved in this browser</b></div>{p.profile?.birthday&&<div><span>Birthday</span><b>{p.profile.birthday}</b></div>}</div><p className="settingsNote">If you use a different phone or browser, it starts with a separate profile. LifeOS does not upload this information to a server.</p><button className="danger wide" onClick={()=>{if(window.confirm('Log out and erase this device’s LifeOS profile and all saved entries? This cannot be undone.'))p.onLogout()}}>Log out and erase device data</button><button className="secondary wide" onClick={p.onClose}>Cancel</button></div></div>}
 
 function Panel({title,icon,children}:{title:string;icon:React.ReactNode;children:React.ReactNode}){return <section className="panel"><div className="panelHead"><div><span className="panelIcon">{icon}</span><h3>{title}</h3></div></div>{children}</section>}
