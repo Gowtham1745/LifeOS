@@ -22,3 +22,80 @@
 
 .profile{cursor:pointer}.profile:hover{background:rgba(255,255,255,.05)}
 .profileModal{width:min(560px,calc(100vw - 28px));padding:30px}.profileHero{display:flex;align-items:center;gap:18px;padding-bottom:24px;border-bottom:1px solid var(--line,#252c39)}.profileAvatar{width:72px;height:72px;border-radius:22px;display:grid;place-items:center;font-size:30px;font-weight:800;background:linear-gradient(135deg,#625bff,#8b5cf6);color:#fff;box-shadow:0 12px 30px #625bff33}.profileHero h2{margin:5px 0;font-size:25px}.profileHero p{margin:0;color:#8b95a8;word-break:break-word}.profileRows{display:grid;gap:1px;margin:22px 0;background:var(--line,#252c39);border:1px solid var(--line,#252c39);border-radius:14px;overflow:hidden}.profileRows div{display:flex;justify-content:space-between;gap:20px;padding:15px;background:var(--panel,#111722)}.profileRows span{color:#8b95a8}.profileRows b{text-align:right}.danger{background:#b83c48;color:white;border:0}.secondary{margin-top:9px;background:transparent;color:inherit;border:1px solid #343d4d}
+
+/* Local profile setup and device-only privacy */
+.setupLabel{display:block;font-size:12px;font-weight:700;color:#59657a;margin:5px 0 7px}
+.setupLabel span{font-weight:400;color:#8c96a8}
+.authCard .setupSubmit{min-height:48px;margin-top:7px}
+.localSetup .authPrivacy{margin-top:17px}
+.profileModal .profileHero{margin:10px 0 0;padding:0 0 20px;border-bottom:1px solid #e4e8f0}
+.dark .profileModal .profileHero{border-color:#263044}
+.profileModal .profileRows{margin-top:18px}
+.profileModal .profileRows div{background:#f8f9fc}
+.dark .profileModal .profileRows div{background:#0b1018}
+.profileModal .danger{padding:13px 15px;border-radius:11px;font-weight:700}
+.profileModal .secondary{padding:12px 15px;border-radius:11px;font-weight:600}
+/* Small-screen layout: prevent header, score ring and navigation from colliding. */
+@media(max-width:800px){
+ .topbar{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:14px;padding:24px 20px 14px}
+ .topbar>div:first-of-type{min-width:0;overflow-wrap:anywhere}
+ .topbar h1{font-size:clamp(23px,6vw,30px);line-height:1.18;overflow-wrap:anywhere}
+ .topbar p{font-size:13px;line-height:1.45}
+ .topActions{width:100%;display:grid;grid-template-columns:minmax(0,1fr) 42px auto;gap:8px;align-items:center}
+ .searchBox{min-width:0;width:100%}.searchBox input{width:100%;min-width:0}
+ .topActions .primary{white-space:nowrap;padding:10px 12px;font-size:12px}
+ .content{padding:10px 18px 100px}
+ .heroMain{padding:25px 22px;gap:20px}
+ .heroMain>div:first-child{min-width:0;flex:1}
+ .hero h2{font-size:clamp(25px,6.5vw,34px);line-height:1.12;overflow-wrap:anywhere}
+ .heroMain p{font-size:13px;line-height:1.5}
+ .scoreRing{width:94px;height:94px;flex:none;border-width:6px}
+ .scoreRing strong{font-size:24px}.scoreRing small{font-size:9px}
+ .heroStats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .heroStats>div,.heroStats>button{min-width:0;min-height:72px;padding:13px 10px;justify-content:center;flex-wrap:wrap;gap:7px}
+ .heroStats>div:nth-child(2){border-right:0}
+ .heroStats>button{grid-column:1/-1;border-top:1px solid #e3e7f0}
+ .dark .heroStats>button{border-color:#222b3b}
+ .grid3,.grid2{grid-template-columns:minmax(0,1fr)}
+ .panel{min-width:0;padding:17px}
+ .goalCards,.noteGrid,.financeCards{grid-template-columns:minmax(0,1fr)}
+ .financeForm,.calendarForm,.habitQuick{grid-template-columns:minmax(0,1fr)}
+ .searchResults{top:150px;left:18px;right:18px;width:auto}
+ .sidebar{width:min(290px,86vw)}
+ .profileRows div{align-items:flex-start}
+ .profileRows b{max-width:58%;overflow-wrap:anywhere}
+}
+@media(max-width:520px){
+ .topbar{padding:20px 16px 12px}
+ .topbar h1{font-size:25px;margin-top:6px}
+ .topActions{grid-template-columns:minmax(0,1fr) 40px}
+ .topActions .primary{grid-column:1/-1;width:100%;min-height:44px}
+ .content{padding-left:14px;padding-right:14px}
+ .hero{border-radius:18px}
+ .heroMain{display:grid;grid-template-columns:minmax(0,1fr);padding:22px 19px;gap:17px}
+ .heroMain>div:first-child{grid-row:1}
+ .hero h2{font-size:29px;letter-spacing:-.7px}
+ .hero h2 br{display:none}
+ .scoreRing{width:88px;height:88px;justify-self:start}
+ .heroStats>div{flex-direction:column;text-align:center;gap:5px}
+ .heroStats>div b{font-size:17px}
+ .heroStats>div span{font-size:11px}
+ .heroStats>button{font-size:13px}
+ .panel h3{font-size:15px}
+ .row{gap:8px;font-size:13px}
+ .p{flex:none}
+ .moneyHero strong{font-size:26px}
+ .authShell{padding:14px;min-height:100dvh}
+ .authCard{padding:24px 20px;border-radius:22px}
+ .authCard h1{font-size:31px}
+ .profileModal{padding:18px}
+ .profileAvatar{width:58px;height:58px;border-radius:17px;font-size:24px}
+ .profileHero{gap:12px}
+ .profileHero h2{font-size:20px}
+ .toast{left:14px;right:14px;bottom:86px;justify-content:center}
+}
+@media(min-width:801px) and (max-width:1100px){
+ .topbar{padding:30px 24px 20px}
+ .content{padding-left:24px;padding-right:24px}
+ .topActions{flex-wrap:wrap;justify-content:flex-end}
+}
