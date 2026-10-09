@@ -30,7 +30,6 @@ const day=()=>{const d=new Date();return d.toISOString().slice(0,10)}
 const id=()=>crypto.randomUUID()
 const money=(n:number)=>'₹'+Math.round(n).toLocaleString('en-IN')
 const emptyStore=(name=''):Store=>({name,tasks:[],habits:[],goals:[],transactions:[],notes:[],journal:[],events:[],checkins:[]})
-const seed:Store=emptyStore('')
 const valid=(v:unknown):v is Store=>!!v&&typeof v==='object'&&Array.isArray((v as Store).tasks)&&Array.isArray((v as Store).habits)
 const load=()=>{try{const v=JSON.parse(localStorage.getItem(K)||'null');if(!valid(v))return emptyStore();if(v.name==='Gowtham'&&v.tasks?.some((t:Task)=>t.id==='1'&&t.title==='Plan today before starting'))return emptyStore();return v}catch{return emptyStore()}}
 type LocalProfile={fullName:string;birthday?:string;createdAt:string}
@@ -39,7 +38,7 @@ const streak=(dates:string[])=>{const s=new Set(dates);let n=0;const d=new Date(
 
 export default function App(){
  const [s,setS]=useState<Store>(load),[localProfile,setLocalProfile]=useState<LocalProfile|null>(loadProfile),[page,setPage]=useState('Overview'),[dark,setDark]=useState(localStorage.getItem('lifeos_theme')!=='light'),[toast,setToast]=useState(''),[query,setQuery]=useState(''),[menu,setMenu]=useState(false),[modal,setModal]=useState(false)
- const [profileOpen,setProfileOpen]=useState(false),[authReady,setAuthReady]=useState(true),[cloudUser,setCloudUser]=useState<{id:string;full_name:string;email:string}|null>(null),[syncing,setSyncing]=useState(false),[authError,setAuthError]=useState('')
+ const [profileOpen,setProfileOpen]=useState(false),[authReady,setAuthReady]=useState(true),[cloudUser,setCloudUser]=useState<{id:string;full_name:string;email:string}|null>(null),[,setSyncing]=useState(false),[,setAuthError]=useState('')
  useEffect(()=>localStorage.setItem('lifeos_theme',dark?'dark':'light'),[dark])
  useEffect(()=>{if(toast){const t=setTimeout(()=>setToast(''),2200);return()=>clearTimeout(t)}},[toast])
  useEffect(()=>{
