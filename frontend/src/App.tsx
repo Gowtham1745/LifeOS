@@ -61,7 +61,7 @@ export default function App(){
    const t=setTimeout(async()=>{try{setSyncing(true);await api('/api/v1/state',{method:'PUT',body:JSON.stringify({data:s})})}catch(e){setToast(e instanceof Error?e.message:'Sync failed')}finally{setSyncing(false)}},700)
    return()=>clearTimeout(t)
  },[s,cloudUser,authReady])
- useEffect(()=>{if(!isCloud||!cloudUser)return;localStorage.setItem(K,JSON.stringify(s))},[s,cloudUser])
+ useEffect(()=>{if(!localProfile)return;localStorage.setItem(K,JSON.stringify(s))},[s,localProfile])
  const update=(fn:(x:Store)=>Store)=>setS(x=>fn({...x}));const flash=(x:string)=>setToast(x)
  if(!localProfile)return <LocalProfileSetup onCreate={(profile)=>{localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));setLocalProfile(profile);setS(emptyStore(profile.fullName));localStorage.setItem(K,JSON.stringify(emptyStore(profile.fullName)))}} />
 
