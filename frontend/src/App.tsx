@@ -26,7 +26,7 @@ async function api<T>(path:string,options:RequestInit={}) {
 }
 
 const K='lifeos_store_final'
-const day=()=>{const d=new Date();return d.toISOString().slice(0,10)}
+const day=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,'0');const date=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${date}`}
 const greeting=()=>{const h=new Date().getHours();return h<12?'Good morning':h<17?'Good afternoon':'Good evening'}
 const id=()=>crypto.randomUUID()
 const money=(n:number)=>'₹'+Math.round(n).toLocaleString('en-IN')
@@ -35,7 +35,8 @@ const valid=(v:unknown):v is Store=>!!v&&typeof v==='object'&&Array.isArray((v a
 const load=()=>{try{const v=JSON.parse(localStorage.getItem(K)||'null');if(!valid(v))return emptyStore();if(v.name==='Gowtham'&&v.tasks?.some((t:Task)=>t.id==='1'&&t.title==='Plan today before starting'))return emptyStore();return v}catch{return emptyStore()}}
 type LocalProfile={fullName:string;birthday?:string;createdAt:string}
 const loadProfile=():LocalProfile|null=>{try{const p=JSON.parse(localStorage.getItem(PROFILE_KEY)||'null');return p&&typeof p.fullName==='string'&&p.fullName.trim()?p:null}catch{return null}}
-const streak=(dates:string[])=>{const s=new Set(dates);let n=0;const d=new Date();while(s.has(d.toISOString().slice(0,10))){n++;d.setDate(d.getDate()-1)}return n}
+const streak=(dates:string[])=>{const s=new Set(dates);let n=0;const d=new Date();while(s.has(dayFor(d))){n++;d.setDate(d.getDate()-1)}return n}
+const dayFor=(d:Date)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 
 export default function App(){
  const [s,setS]=useState<Store>(load),[localProfile,setLocalProfile]=useState<LocalProfile|null>(loadProfile),[page,setPage]=useState('Overview'),[dark,setDark]=useState(localStorage.getItem('lifeos_theme')!=='light'),[toast,setToast]=useState(''),[query,setQuery]=useState(''),[menu,setMenu]=useState(false),[modal,setModal]=useState(false)
