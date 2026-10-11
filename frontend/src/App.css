@@ -99,3 +99,8 @@
  .content{padding-left:24px;padding-right:24px}
  .topActions{flex-wrap:wrap;justify-content:flex-end}
 }
+
+/* Accessibility: keyboard focus, reduced motion, and comfortable touch targets. */
+:where(button,input,textarea,select,a,[tabindex]):focus-visible{outline:3px solid #8b85ff;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+@media(hover:none) and (pointer:coarse){.nav{min-height:44px}.iconBtn{min-width:44px;min-height:44px}.delete{min-width:40px;min-height:40px}}
