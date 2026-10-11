@@ -47,3 +47,28 @@ The GitHub Actions workflow builds the frontend and publishes `frontend/dist` to
 React 19 · TypeScript · Vite · Lucide React · GitHub Actions · GitHub Pages
 
 Built by **Gowtham A**.
+
+
+## First-time setup
+
+1. Open the live site and enter a display name.
+2. Add tasks, habits, goals, notes, journal entries, and events from the navigation.
+3. Use the theme button to switch between dark and light appearance.
+4. Open **Account & Settings** to review the device-only profile and logout options.
+
+## Data and device boundaries
+
+LifeOS currently runs as a static, local-first application. Your entries are stored in the browser on the device you use. They are not automatically synchronized to another phone, browser, or computer. Browser storage can be cleared by the browser or device, so use the backup/export feature before resetting or clearing data.
+
+The name field is a display name, not a verified identity. Do not store passwords, financial account credentials, health details, or other sensitive information in LifeOS.
+
+## Contribution workflow
+
+For a small, reviewable change:
+
+1. Make one focused improvement.
+2. Run `npm run build` from `frontend`.
+3. Review the diff and commit with a descriptive message.
+4. Confirm the **LifeOS CI** and **Deploy LifeOS** workflows finish successfully.
+
+Prefer meaningful, tested improvements over empty commits. GitHub contribution intensity is based on qualifying activity and varies with the account's contribution settings.
