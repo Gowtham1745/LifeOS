@@ -104,3 +104,5 @@
 :where(button,input,textarea,select,a,[tabindex]):focus-visible{outline:3px solid #8b85ff;outline-offset:3px}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 @media(hover:none) and (pointer:coarse){.nav{min-height:44px}.iconBtn{min-width:44px;min-height:44px}.delete{min-width:40px;min-height:40px}}
+
+.emptyState{margin:0;padding:16px 2px;color:#8792a6;font-size:13px;line-height:1.65;max-width:34ch}.dark .emptyState{color:#8d98ac}
