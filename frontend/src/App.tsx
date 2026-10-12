@@ -91,7 +91,7 @@ export default function App(){
 
 function LocalProfileSetup(p:{onCreate:(profile:LocalProfile)=>void}){
  const [fullName,setFullName]=useState(''),[birthday,setBirthday]=useState(''),[error,setError]=useState('')
- const submit=()=>{const name=fullName.trim().replace(/\s+/g,' ');if(name.length<2){setError('Please enter your name (at least 2 characters).');return}p.onCreate({fullName:name,...(birthday?{birthday}:{}),createdAt:new Date().toISOString()})}
+ const submit=()=>{const name=fullName.trim().replace(/\s+/g,' ');if(name.length<2){setError('Please enter your name (at least 2 characters).');return}if(birthday&&birthday>day()){setError('Birthday cannot be in the future.');return}p.onCreate({fullName:name,...(birthday?{birthday}:{}),createdAt:new Date().toISOString()})}
  return <div className="authShell"><div className="authCard localSetup">
   <div className="authBrand"><span className="brandIcon"><Activity/></span><span><b>LifeOS</b><small>YOUR PERSONAL SPACE</small></span></div>
   <span className="eyebrow">WELCOME — LET'S SET UP YOUR SPACE</span>
@@ -100,8 +100,8 @@ function LocalProfileSetup(p:{onCreate:(profile:LocalProfile)=>void}){
   <label className="setupLabel" htmlFor="lifeos-full-name">Your name</label>
   <input id="lifeos-full-name" autoFocus value={fullName} onChange={e=>setFullName(e.target.value)} placeholder="e.g. Suresh Kumar" autoComplete="name" maxLength={80} onKeyDown={e=>e.key==='Enter'&&submit()}/>
   <label className="setupLabel" htmlFor="lifeos-birthday">Birthday <span>(optional)</span></label>
-  <input id="lifeos-birthday" type="date" value={birthday} onChange={e=>setBirthday(e.target.value)}/>
-  {error&&<div className="authError">{error}</div>}
+  <input id="lifeos-birthday" type="date" max={day()} value={birthday} onChange={e=>setBirthday(e.target.value)}/>
+  {error&&<div className="authError" role="alert">{error}</div>}
   <button className="primary wide setupSubmit" onClick={submit}>Create my personal space <span aria-hidden="true">→</span></button>
   <small className="authPrivacy">Your profile and entries stay in this browser on this device. Don't enter sensitive information. Clearing browser data can erase your LifeOS.</small>
  </div></div>
