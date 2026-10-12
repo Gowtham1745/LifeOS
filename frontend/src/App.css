@@ -123,3 +123,29 @@
 .financeForm input:focus,.financeForm select:focus{border-color:#625bff}
 @media(max-width:900px){.financeForm{grid-template-columns:repeat(2,minmax(0,1fr))}.financeForm .primary{width:100%}}
 @media(max-width:760px){.searchResults{position:fixed;top:112px;left:18px;right:18px;width:auto;max-height:55vh}.financeForm{grid-template-columns:1fr}.financeForm .primary{width:100%}}
+
+/* Task triage, focus presets and local backup controls */
+.taskToolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:4px 0 14px}
+.taskCounts{display:flex;align-items:baseline;gap:6px;margin-right:auto;color:#8490a4;font-size:11px}
+.taskCounts b{font:700 18px 'Space Grotesk';color:#625bff}
+.taskFilters{display:flex;gap:3px;padding:3px;border:1px solid #e3e7f0;border-radius:10px;background:#f7f8fc}
+.dark .taskFilters{background:#0b1018;border-color:#273143}
+.taskFilters button,.focusPresets button{border:0;background:transparent;color:#8590a4;padding:7px 10px;border-radius:7px;font-size:11px}
+.taskFilters button.active,.focusPresets button.active{background:#625bff;color:#fff}
+.taskToolbar select{border:1px solid #dfe4ee;background:#fff;color:inherit;border-radius:9px;padding:9px;font-size:11px}
+.dark .taskToolbar select{background:#0b1018;border-color:#273143}
+.focusPresets{display:flex;justify-content:center;gap:7px;margin-bottom:18px}
+.focusPresets button{border:1px solid #e3e7f0;padding:9px 15px;border-radius:9px;font-weight:700}
+.dark .focusPresets button{border-color:#273143}
+.focusPresets button:disabled{opacity:.55;cursor:not-allowed}
+.timerProgress{height:6px;overflow:hidden;border-radius:99px;background:#edf0f5;margin:0 0 18px}
+.dark .timerProgress{background:#252d3b}
+.timerProgress i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#625bff,#9b8cff);transition:width .3s linear}
+.journalActions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0 18px}
+.backupTools{max-width:1236px;margin:0 auto;padding:0 42px 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.backupTools>span{font-size:11px;color:#8993a6;margin-right:auto}
+.backupTools .secondary,.backupImport{min-height:36px;display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:11px;padding:8px 11px;border:1px solid #dfe4ee;border-radius:9px;background:#fff;color:inherit;cursor:pointer}
+.dark .backupTools .secondary,.dark .backupImport{background:#101621;border-color:#273143}
+.backupImport{position:relative;overflow:hidden}
+.backupImport input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+@media(max-width:760px){.taskToolbar{align-items:stretch}.taskCounts{width:100%;margin-bottom:4px}.taskFilters{flex:1;justify-content:space-around}.taskToolbar select,.taskToolbar>.secondary{flex:1}.backupTools{padding:0 18px 16px}.backupTools>span{width:100%}.backupTools .secondary,.backupImport{flex:1}.journalActions{align-items:flex-start;flex-direction:column}}
