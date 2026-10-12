@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useState} from 'react'
-import {Activity,BarChart3,BookOpen,CalendarDays,Check,CheckCircle2,Circle,Clock3,Flame,LayoutDashboard,ListTodo,Moon,Plus,RotateCcw,Save,Search,Settings,Sparkles,StickyNote,Sun,Target,Timer,Trash2,TrendingUp,Wallet,X} from 'lucide-react'
+import {BarChart3,BookOpen,CalendarDays,Check,CheckCircle2,Circle,Clock3,Flame,LayoutDashboard,ListTodo,Moon,Plus,RotateCcw,Save,Search,Settings,Sparkles,StickyNote,Sun,Target,Timer,Trash2,TrendingUp,Wallet,X} from 'lucide-react'
 import './App.css'
 
 type Task={id:string;title:string;done:boolean;priority:'Low'|'Medium'|'High'}
