@@ -149,3 +149,5 @@
 .backupImport{position:relative;overflow:hidden}
 .backupImport input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
 @media(max-width:760px){.taskToolbar{align-items:stretch}.taskCounts{width:100%;margin-bottom:4px}.taskFilters{flex:1;justify-content:space-around}.taskToolbar select,.taskToolbar>.secondary{flex:1}.backupTools{padding:0 18px 16px}.backupTools>span{width:100%}.backupTools .secondary,.backupImport{flex:1}.journalActions{align-items:flex-start;flex-direction:column}}
+
+.brandIcon{overflow:hidden;flex:none}.brandIcon img{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit}
