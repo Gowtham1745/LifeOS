@@ -58,7 +58,7 @@ Built by **Gowtham A**.
 
 ## Data and device boundaries
 
-LifeOS currently runs as a static, local-first application. Your entries are stored in the browser on the device you use. They are not automatically synchronized to another phone, browser, or computer. Browser storage can be cleared by the browser or device, so use the backup/export feature before resetting or clearing data.
+LifeOS currently runs as a static, local-first application. Your entries are stored in the browser on the device you use. They are not automatically synchronized to another phone, browser, or computer. Private browsing sessions and browser profiles may also keep separate storage. Browser storage can be cleared by the browser or device, so use the backup/export feature before resetting or clearing data.
 
 The name field is a display name, not a verified identity. Do not store passwords, financial account credentials, health details, or other sensitive information in LifeOS.
 
