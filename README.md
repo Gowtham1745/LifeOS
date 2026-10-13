@@ -22,7 +22,7 @@ LifeOS is a local-first React + TypeScript dashboard designed to make everyday p
 
 ## Privacy
 
-The public demo stores its working data in your browser's local storage. The static GitHub Pages site does not require an account or send your dashboard data to a LifeOS cloud service.
+The public demo stores its working data in your browser's local storage. Backups are exported as JSON and must be saved somewhere you control; they are not uploaded automatically. The static GitHub Pages site does not require an account or send your dashboard data to a LifeOS cloud service.
 
 **Important:** this repository is public, so never commit passwords, API keys, private credentials, or personal secrets.
 
