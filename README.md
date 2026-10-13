@@ -30,7 +30,7 @@ The public demo stores its working data in your browser's local storage. Backups
 
 ```powershell
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
