@@ -67,6 +67,10 @@ LifeOS currently runs as a static, local-first application. Your entries are sto
 
 The name field is a display name, not a verified identity. Anyone with access to the same unlocked browser profile may be able to view its saved LifeOS data. Do not store passwords, financial account credentials, health details, or other sensitive information in LifeOS.
 
+## Troubleshooting deployment
+
+If a deployment fails, open the newest run in the repository's **Actions** tab and inspect the first failed step. A failed build prevents the Pages deployment job from publishing a new artifact.
+
 ## Contribution workflow
 
 For a small, reviewable change:
