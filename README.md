@@ -76,7 +76,8 @@ If a deployment fails, open the newest run in the repository's **Actions** tab a
 For a small, reviewable change:
 
 1. Make one focused improvement.
-2. Run `npm run build` from `frontend`.
+2. Review `git diff` for unintended changes.
+3. Run `npm run build` from `frontend`.
 3. Review the diff and commit with a descriptive message.
 4. Confirm the **LifeOS CI** and **Deploy LifeOS** workflows finish successfully.
 
