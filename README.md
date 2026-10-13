@@ -57,6 +57,10 @@ Built by **Gowtham A**.
 3. Use the theme button to switch between dark and light appearance.
 4. Open **Account & Settings** to review the device-only profile and logout options.
 
+## Backup and restore
+
+Use the JSON export before changing browsers, clearing site data, or resetting your device. Store the backup in a location you control. Importing a backup replaces the current entries, so export the current state first if you may need it later.
+
 ## Data and device boundaries
 
 LifeOS currently runs as a static, local-first application. Your entries are stored in the browser on the device you use. They are not automatically synchronized to another phone, browser, or computer. Private browsing sessions and browser profiles may also keep separate storage. Browser storage can be cleared by the browser or device, so use the backup/export feature before resetting or clearing data.
