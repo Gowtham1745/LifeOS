@@ -41,7 +41,7 @@ npm run build
 npm run preview
 ```
 
-The GitHub Actions workflow runs the TypeScript check and production build, then publishes `frontend/dist` to GitHub Pages on every push to `main`.
+The GitHub Actions workflow runs the TypeScript check and production build, then publishes `frontend/dist` to GitHub Pages on every push to `main`. You can also inspect or manually start supported workflows from the repository's Actions tab.
 
 ## Tech
 
