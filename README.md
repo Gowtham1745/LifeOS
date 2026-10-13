@@ -38,6 +38,7 @@ For a production build:
 
 ```powershell
 npm run build
+npm run preview
 ```
 
 The GitHub Actions workflow builds the frontend and publishes `frontend/dist` to GitHub Pages on every push to `main`.
